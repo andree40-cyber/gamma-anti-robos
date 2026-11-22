@@ -167,8 +167,22 @@
       border-radius: 20px;
       background: var(--card);
       box-shadow: var(--shadow);
+      transition: transform .24s ease, box-shadow .24s ease;
     }
+    .fraud-card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(16, 42, 42, .12); }
     .fraud-card:nth-child(4), .fraud-card:nth-child(5) { grid-column: span 3; }
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .65s ease, transform .65s ease;
+    }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+    .fraud-card.reveal { transition: opacity .65s ease, transform .65s ease, box-shadow .24s ease; }
+    .fraud-card.reveal.is-visible:hover { transform: translateY(-4px); }
+    .cards .fraud-card.reveal:not(.is-visible):nth-child(2) { transition-delay: .08s; }
+    .cards .fraud-card.reveal:not(.is-visible):nth-child(3) { transition-delay: .16s; }
+    .cards .fraud-card.reveal:not(.is-visible):nth-child(4) { transition-delay: .08s; }
+    .cards .fraud-card.reveal:not(.is-visible):nth-child(5) { transition-delay: .16s; }
     .card-top { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
     .icon {
       display: grid;
@@ -338,6 +352,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      .reveal { opacity: 1; transform: none; }
     }
   </style>
 </head>
@@ -517,6 +532,27 @@
   </footer>
 
   <script>
+    const revealElements = document.querySelectorAll(
+      '.section-heading, .fraud-card, .checklist-intro, .check-item, .response-grid > div, .quiz-intro, .quiz fieldset'
+    );
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if ('IntersectionObserver' in window && !reduceMotion) {
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -24px 0px' });
+
+      revealElements.forEach((element) => {
+        element.classList.add('reveal');
+        revealObserver.observe(element);
+      });
+    }
+
     const checks = Array.from(document.querySelectorAll('.check-item input'));
     const progressBar = document.getElementById('progress-bar');
     const progress = document.querySelector('.progress');
